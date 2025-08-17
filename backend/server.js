@@ -34,9 +34,9 @@ app.use("/api/payment", require("./routes/paymentRoute"));
 app.use(globalErrorHandler);
 
 // Server
-app.listen(PORT, () => {
+app.listen(8001, () => {
   console.log(
     "\x1b[32m%s\x1b[0m",
-    `>>>  POS Server is listening on port ${PORT}`
+    `>>>  POS Server is listening on port ${8001}`
   );
 });

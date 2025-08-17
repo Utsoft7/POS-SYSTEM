@@ -22,11 +22,16 @@ const orderSchema = new mongoose.Schema(
     },
     items: [],
     table: { type: mongoose.Schema.Types.ObjectId, ref: "Table" },
+  billNo: { type: String, default: null },
     paymentMethod: String,
     paymentData: {
       razorpay_order_id: String,
       razorpay_payment_id: String,
     },
+
+    // KOT fields
+    kotNumber: { type: String, default: null },
+    kotPrinted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

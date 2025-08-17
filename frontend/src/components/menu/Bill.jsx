@@ -7,10 +7,12 @@ import {
   createOrderRazorpay,
   updateTable,
   verifyPaymentRazorpay,
+  updateOrder,
 } from "../../https/index";
 import { getTotalPrice, removeAllItems } from "../../redux/slices/cartSlice";
 import { removeCustomer } from "../../redux/slices/customerSlice";
 import Invoice from "../invoice/Invoice";
+import { printKitchenTicket } from "../kitchen/KitchenTicket"; // add this import
 
 function loadScript(src) {
   return new Promise((resolve) => {
@@ -95,6 +97,7 @@ const Bill = () => {
               },
               items: cartData,
               table: customerData.table.tableId,
+              tableNo: customerData.table.tableNo,
               paymentMethod: paymentMethod,
               paymentData: {
                 razorpay_order_id: response.razorpay_order_id,
@@ -137,7 +140,8 @@ const Bill = () => {
           totalWithTax: totalPriceWithTax,
         },
         items: cartData,
-        table: customerData.table.tableId,
+  table: customerData.table.tableId,
+  tableNo: customerData.table.tableNo,
         paymentMethod: paymentMethod,
       };
       orderMutation.mutate(orderData);
@@ -152,15 +156,34 @@ const Bill = () => {
 
       setOrderInfo(data);
 
-      const tableData = {
-        status: "Booked",
-        orderId: data._id,
-        tableId: data.table,
-      };
+      // print kitchen ticket
+      try {
+        printKitchenTicket(data, customerData.table);
+        // mark kotPrinted true on backend via mutation
+        updateOrderMutation.mutate({ id: data._id, kotPrinted: true }, {
+          onSuccess: (res) => {
+            console.log('kotPrinted set true', res.data);
+            // now update the table to Booked
+            const tableIdToUse = data.table?._id || data.table || customerData.table.tableId;
+            const tableData = {
+              status: 'Booked',
+              orderId: data._id,
+              tableId: tableIdToUse,
+            };
+            tableUpdateMutation.mutate(tableData);
+          },
+          onError: (err) => {
+            console.error('Failed to set kotPrinted', err);
+            // still attempt to update table as fallback
+            const tableIdToUse = data.table?._id || data.table || customerData.table.tableId;
+            tableUpdateMutation.mutate({ status: 'Booked', orderId: data._id, tableId: tableIdToUse });
+          }
+        });
+      } catch (err) {
+        console.error("KOT print error", err);
+      }
 
-      setTimeout(() => {
-        tableUpdateMutation.mutate(tableData);
-      }, 1500);
+  // table update will be triggered after kotPrinted update via updateOrderMutation
 
       enqueueSnackbar("Order Placed!", {
         variant: "success",
@@ -182,6 +205,16 @@ const Bill = () => {
     onError: (error) => {
       console.log(error);
     },
+  });
+
+  const updateOrderMutation = useMutation({
+    mutationFn: (reqData) => updateOrder(reqData),
+    onSuccess: (res) => {
+      console.log('order updated', res.data);
+    },
+    onError: (err) => {
+      console.error('updateOrder failed', err);
+    }
   });
 
   return (
