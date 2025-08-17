@@ -6,69 +6,123 @@ const Invoice = ({ orderInfo, setShowInvoice }) => {
   const invoiceRef = useRef(null);
   const handlePrint = () => {
     const printContent = invoiceRef.current.innerHTML;
-    const WinPrint = window.open("", "", "width=900,height=650");
+    const WinPrint = window.open("", "", "width=380,height=900");
+
+    const logoUrl = `${window.location.origin}/point-of-service.png`;
+    const orderNumber = `#${Math.floor(new Date(orderInfo.orderDate).getTime())}`;
+    const billNo = orderInfo.billNo || orderNumber;
+    const cashier = orderInfo.cashierName || '---';
+    const tableNo = orderInfo.table?.tableNo ?? orderInfo.tableNo ?? (orderInfo.customerDetails?.table ?? 'N/A');
+
+    // build items rows and totals
+    const items = orderInfo.items || [];
+    let itemsRows = '';
+    let totalQty = 0;
+    items.forEach((it, idx) => {
+      const qty = Number(it.quantity || 0);
+      const price = Number(it.price || 0);
+      const amount = qty * price;
+      totalQty += qty;
+      itemsRows += `
+        <tr>
+          <td style="width:28px;vertical-align:top;">${idx + 1}</td>
+          <td style="vertical-align:top;">${it.name.replace(/</g, '&lt;')}</td>
+          <td style="text-align:center;width:50px;vertical-align:top;">${qty}</td>
+          <td style="text-align:right;width:70px;vertical-align:top;">₹${price.toFixed(2)}</td>
+          <td style="text-align:right;width:80px;vertical-align:top;">₹${amount.toFixed(2)}</td>
+        </tr>`;
+    });
+
+    const subTotal = Number(orderInfo.bills?.total || 0);
+    const tax = Number(orderInfo.bills?.tax || 0);
+    const grand = Number(orderInfo.bills?.totalWithTax || subTotal + tax);
+    const roundOff = (Math.round(grand) - grand).toFixed(2);
 
     WinPrint.document.write(`
       <html>
         <head>
           <title>Order Receipt</title>
+          <meta name="viewport" content="width=device-width,initial-scale=1">
           <style>
-            body {
-              font-family: Arial, sans-serif;
-              padding: 20px;
-              color: #333;
-            }
-            .receipt-container {
-              width: 320px;
-              margin: 0 auto;
-              border: 1px solid #ddd;
-              padding: 15px;
-              box-sizing: border-box;
-            }
-            h2 {
-              text-align: center;
-              margin-bottom: 8px;
-            }
-            p, li {
-              font-size: 14px;
-              line-height: 1.4;
-              margin: 4px 0;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 10px;
-            }
-            th, td {
-              text-align: left;
-              padding: 6px 4px;
-              border-bottom: 1px solid #ddd;
-            }
-            .total-row td {
-              font-weight: 700;
-              font-size: 18px;
-              border-top: 2px solid #444;
-              color: #1a202c; /* Darker color for totals */
-            }
-            .highlight-total {
-              font-weight: 700;
-              font-size: 16px;
-              color: #d97706; /* Amber-600 (orange highlight) */
-            }
-            .order-id {
-              font-family: monospace;
-              background-color: #f5f5f5;
-              padding: 4px 6px;
-              border-radius: 4px;
-              display: inline-block;
-              margin-top: 4px;
-            }
+            body { font-family: 'Courier New', monospace; color:#111; padding:6px; }
+            .center { text-align:center }
+            .biz { font-weight:900; font-size:18px }
+            .sub { font-size:11px }
+            .hr { border-top:1px solid #000; margin:6px 0 }
+            .underline { border-bottom:1px solid #000; height:14px; display:block }
+            table { width:100%; border-collapse:collapse; font-size:12px }
+            td, th { padding:2px 4px }
+            .right { text-align:right }
+            .bold { font-weight:800 }
           </style>
         </head>
         <body>
-          <div class="receipt-container">
-            ${printContent}
+          <div class="center">
+            <img src="${logoUrl}" style="width:90px;height:auto;object-fit:contain;" onerror="this.style.display='none'" />
+            <div class="biz">Point of Service</div>
+            <div class="sub">(A UNIT OF VIBHA FOODS)</div>
+            <div class="sub">2nd Floor, OEU Building, KIIT College Road, Patia.</div>
+            <div class="sub">Ph: 9646767888</div>
           </div>
+
+          <div class="hr"></div>
+
+          <div><strong>Name:</strong> ${orderInfo.customerDetails?.name || orderInfo.customerName || ''}</div>
+          <div><strong>Mobile:</strong> ${orderInfo.customerDetails?.phone || orderInfo.customerPhone || ''}</div>
+          <div class="underline"></div>
+
+          <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px">
+            <div><strong>Date:</strong> ${new Date(orderInfo.orderDate).toLocaleDateString()}</div>
+            <div><strong>Table:</strong> ${tableNo}</div>
+          </div>
+          <div style="margin-top:4px;font-size:12px"><strong>Time:</strong> ${new Date(orderInfo.orderDate).toLocaleTimeString()}</div>
+          <div style="margin-top:4px;font-size:12px"><strong>Cashier:</strong> ${cashier} &nbsp;&nbsp; <strong>Bill No.:</strong> ${billNo}</div>
+
+          <div class="hr"></div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width:28px;text-align:left">No.</th>
+                <th style="text-align:left">Item</th>
+                <th style="text-align:center;width:50px">Qty.</th>
+                <th style="text-align:right;width:70px">Price</th>
+                <th style="text-align:right;width:80px">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsRows}
+            </tbody>
+          </table>
+
+          <div class="hr"></div>
+
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <div><strong>Total Qty:</strong> ${totalQty}</div>
+            <div><strong>Sub Total</strong> ₹${subTotal.toFixed(2)}</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <div></div>
+            <div>CGST ₹${(tax / 2).toFixed(2)}</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <div></div>
+            <div>SGST ₹${(tax / 2).toFixed(2)}</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:14px;margin-top:6px">
+            <div class="bold">Round off</div>
+            <div class="bold">${Number(roundOff) >= 0 ? '+' : ''}${Number(roundOff).toFixed(2)}</div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:900">
+            <div>Grand Total</div>
+            <div>₹${grand.toFixed(2)}</div>
+          </div>
+
+          <div class="hr"></div>
+          <div style="text-align:center;font-size:12px">!!! Thank You, Visit Again !!!</div>
         </body>
       </html>
     `);
@@ -78,7 +132,7 @@ const Invoice = ({ orderInfo, setShowInvoice }) => {
     setTimeout(() => {
       WinPrint.print();
       WinPrint.close();
-    }, 1000);
+    }, 800);
   };
 
   return (
