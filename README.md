@@ -36,9 +36,42 @@ Watch a brief walkthrough of the POS system in action, demonstrating key feature
 
 ---
 
-## Getting Started
+## Usage
 
-Follow these steps to get the project running on your local machine.
+1.  **Login:** Access the system using admin credentials.
+2.  **Dashboard:** View sales and order statistics.
+3.  **Manage Menu/Tables:** Navigate to the respective sections to add new dishes or configure restaurant tables.
+4.  **Place an Order:** Select an available table, add items from the menu to the cart, and confirm the order.
+5.  **Generate Bill:** Once the customer is ready to pay, generate the bill, choose a payment method (Cash/Online), and process the payment.
+6.  **Print:** A KOT is automatically printed for the kitchen(KOT), and a final invoice can be printed for the customer.
 
-### 1. Clone the Repository
+---
+
+## Future Roadmap
+
+This POS system is built to be scalable. The future roadmap includes:
+
+-   **Multi-Restaurant Customization:** Evolve the platform into a SaaS model where different restaurants can sign up and customize the POS with their own branding, menu, and data.
+-   **Advanced Analytics:** Introduce more detailed reports on sales, popular items, peak hours, and customer behavior.
+-   **Inventory Management:** Add a module to track stock levels of ingredients and automatically flag items that are running low.
+-   **User Roles & Permissions:** Implement distinct roles (e.g., Admin, Manager, Cashier, Waiter) with different levels of access and permissions.
+-   **Waiter Mobile App:** Develop a companion mobile application for waiters to take orders directly from the table.
+
+---
+
+## Author
+
+-   **Your Name**
+-   GitHub: [UtSoft7]((https://github.com/Utsoft7)) 
+-   LinkedIn: [your-linkedin-profile](httpss://linkedin.com/in/your-linkedin)
+-   GitHub: [@your-username](httpss://github.com/your-username)
+-   LinkedIn: [your-linkedin-profile](httpss://linkedin.com/in/your-linkedin)
+
+---
+
+## Version
+
+**Current Version:** 1.0.0
+
+
 
