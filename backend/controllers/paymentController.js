@@ -67,7 +67,6 @@ const webHookVerification = async (req, res, next) => {
         const payment = req.body.payload.payment.entity;
         console.log(`💰 Payment Captured: ${payment.amount / 100} INR`);
 
-        // Add Payment Details in Database
         const newPayment = new Payment({
           paymentId: payment.id,
           orderId: payment.order_id,

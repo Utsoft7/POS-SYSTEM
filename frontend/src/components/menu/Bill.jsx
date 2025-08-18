@@ -5,25 +5,21 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   addOrder,
   createOrderRazorpay,
+  updateOrder,
   updateTable,
   verifyPaymentRazorpay,
-  updateOrder,
 } from "../../https/index";
 import { getTotalPrice, removeAllItems } from "../../redux/slices/cartSlice";
 import { removeCustomer } from "../../redux/slices/customerSlice";
 import Invoice from "../invoice/Invoice";
-import { printKitchenTicket } from "../kitchen/KitchenTicket"; // add this import
+import KitchenTicket from "../kitchen/KitchenTicket";
 
 function loadScript(src) {
   return new Promise((resolve) => {
     const script = document.createElement("script");
     script.src = src;
-    script.onload = () => {
-      resolve(true);
-    };
-    script.onerror = () => {
-      resolve(false);
-    };
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
     document.body.appendChild(script);
   });
 }
@@ -42,12 +38,15 @@ const Bill = () => {
   const [showInvoice, setShowInvoice] = useState(false);
   const [orderInfo, setOrderInfo] = useState();
 
+  // --- CHANGE #2: Add state to control the KitchenTicket component ---
+  const [orderDataForKOT, setOrderDataForKOT] = useState(null);
+  const [showKitchenTicket, setShowKitchenTicket] = useState(false);
+
   const handlePlaceOrder = async () => {
     if (!paymentMethod) {
       enqueueSnackbar("Please select a payment method!", {
         variant: "warning",
       });
-
       return;
     }
 
@@ -56,7 +55,6 @@ const Bill = () => {
         const res = await loadScript(
           "https://checkout.razorpay.com/v1/checkout.js"
         );
-
         if (!res) {
           enqueueSnackbar("Razorpay SDK failed to load. Are you online?", {
             variant: "warning",
@@ -64,10 +62,7 @@ const Bill = () => {
           return;
         }
 
-        const reqData = {
-          amount: totalPriceWithTax.toFixed(2),
-        };
-
+        const reqData = { amount: totalPriceWithTax.toFixed(2) };
         const { data } = await createOrderRazorpay(reqData);
 
         const options = {
@@ -79,10 +74,8 @@ const Bill = () => {
           order_id: data.order.id,
           handler: async function (response) {
             const verification = await verifyPaymentRazorpay(response);
-            console.log(verification);
             enqueueSnackbar(verification.data.message, { variant: "success" });
 
-            // Place the order
             const orderData = {
               customerDetails: {
                 name: customerData.customerName,
@@ -121,12 +114,9 @@ const Bill = () => {
         rzp.open();
       } catch (error) {
         console.log(error);
-        enqueueSnackbar("Payment Failed!", {
-          variant: "error",
-        });
+        enqueueSnackbar("Payment Failed!", { variant: "error" });
       }
     } else {
-      // Place the order
       const orderData = {
         customerDetails: {
           name: customerData.customerName,
@@ -140,8 +130,8 @@ const Bill = () => {
           totalWithTax: totalPriceWithTax,
         },
         items: cartData,
-  table: customerData.table.tableId,
-  tableNo: customerData.table.tableNo,
+        table: customerData.table.tableId,
+        tableNo: customerData.table.tableNo,
         paymentMethod: paymentMethod,
       };
       orderMutation.mutate(orderData);
@@ -152,42 +142,15 @@ const Bill = () => {
     mutationFn: (reqData) => addOrder(reqData),
     onSuccess: (resData) => {
       const { data } = resData.data;
-      console.log(data);
-
       setOrderInfo(data);
+      enqueueSnackbar("Order Placed!", { variant: "success" });
 
-      // print kitchen ticket
-      try {
-        printKitchenTicket(data, customerData.table);
-        // mark kotPrinted true on backend via mutation
-        updateOrderMutation.mutate({ id: data._id, kotPrinted: true }, {
-          onSuccess: (res) => {
-            console.log('kotPrinted set true', res.data);
-            // now update the table to Booked
-            const tableIdToUse = data.table?._id || data.table || customerData.table.tableId;
-            const tableData = {
-              status: 'Booked',
-              orderId: data._id,
-              tableId: tableIdToUse,
-            };
-            tableUpdateMutation.mutate(tableData);
-          },
-          onError: (err) => {
-            console.error('Failed to set kotPrinted', err);
-            // still attempt to update table as fallback
-            const tableIdToUse = data.table?._id || data.table || customerData.table.tableId;
-            tableUpdateMutation.mutate({ status: 'Booked', orderId: data._id, tableId: tableIdToUse });
-          }
-        });
-      } catch (err) {
-        console.error("KOT print error", err);
-      }
+      // --- CHANGE #3: Trigger KOT component instead of calling the print function ---
+      setOrderDataForKOT(data);
+      setShowKitchenTicket(true);
 
-  // table update will be triggered after kotPrinted update via updateOrderMutation
-
-      enqueueSnackbar("Order Placed!", {
-        variant: "success",
-      });
+      // This will now happen after the KOT is triggered
+      updateOrderMutation.mutate({ id: data._id, kotPrinted: true });
       setShowInvoice(true);
     },
     onError: (error) => {
@@ -197,8 +160,7 @@ const Bill = () => {
 
   const tableUpdateMutation = useMutation({
     mutationFn: (reqData) => updateTable(reqData),
-    onSuccess: (resData) => {
-      console.log(resData);
+    onSuccess: () => {
       dispatch(removeCustomer());
       dispatch(removeAllItems());
     },
@@ -210,18 +172,27 @@ const Bill = () => {
   const updateOrderMutation = useMutation({
     mutationFn: (reqData) => updateOrder(reqData),
     onSuccess: (res) => {
-      console.log('order updated', res.data);
+      const orderData = res.data.data;
+      const tableIdToUse = orderData.table?._id || orderData.table;
+
+      // Update table status after KOT is marked as printed
+      const tableData = {
+        status: "Booked",
+        orderId: orderData._id,
+        tableId: tableIdToUse,
+      };
+      tableUpdateMutation.mutate(tableData);
     },
     onError: (err) => {
-      console.error('updateOrder failed', err);
-    }
+      console.error("updateOrder failed", err);
+    },
   });
 
   return (
     <>
       <div className="flex items-center justify-between px-5 mt-2">
         <p className="text-xs text-[#ababab] font-medium mt-2">
-          Items({cartData.lenght})
+          Items({cartData.length}) {/* Corrected typo: lenght -> length */}
         </p>
         <h1 className="text-[#f5f5f5] text-md font-bold">
           ₹{total.toFixed(2)}
@@ -257,7 +228,6 @@ const Bill = () => {
           Online
         </button>
       </div>
-
       <div className="flex items-center gap-3 px-5 mt-4">
         <button className="bg-[#025cca] px-4 py-3 w-full rounded-lg text-[#f5f5f5] font-semibold text-lg">
           Print Receipt
@@ -272,6 +242,13 @@ const Bill = () => {
 
       {showInvoice && (
         <Invoice orderInfo={orderInfo} setShowInvoice={setShowInvoice} />
+      )}
+
+      {showKitchenTicket && (
+        <KitchenTicket
+          orderInfo={orderDataForKOT}
+          setShowKitchenTicket={setShowKitchenTicket}
+        />
       )}
     </>
   );
