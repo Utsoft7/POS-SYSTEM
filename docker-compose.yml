@@ -1,0 +1,62 @@
+version: '3.8'
+
+# Uses a .env file (next to this compose) for secrets/variables.
+# Create a .env (NOT committed) containing at least:
+#   MONGO_ROOT_USERNAME=devroot
+#   MONGO_ROOT_PASSWORD=devpass123
+#   MONGO_APP_DB=pos-db
+#   MONGO_APP_USER=appuser
+#   MONGO_APP_PASS=apppass123
+#   JWT_SECRET=change_me
+#   RAZORPAY_KEY_ID=your_razorpay_key_id
+#   RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+#   RAZORPAY_WEBHOOK_SECRET=your_razorpay_webhook_secret
+#   NODE_ENV=development
+# If you prefer a single URI variable you can also define MONGODB_URI explicitly.
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8001:8001"
+    environment:
+      # Prefer passing pre-built URI, fallback builds one using separate vars.
+      MONGODB_URI: ${MONGODB_URI:-mongodb://${MONGO_APP_USER:-$MONGO_ROOT_USERNAME}:${MONGO_APP_PASS:-$MONGO_ROOT_PASSWORD}@mongo:27017/${MONGO_APP_DB:-pos-db}?authSource=admin}
+      PORT: ${PORT:-8001}
+      NODE_ENV: ${NODE_ENV:-development}
+      JWT_SECRET: ${JWT_SECRET}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET}
+    depends_on:
+      - mongo
+    networks:
+      - pos-network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - pos-network
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - pos-network
+
+networks:
+  pos-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
