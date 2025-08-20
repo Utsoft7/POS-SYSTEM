@@ -9,14 +9,20 @@ const Invoice = ({ orderInfo, setShowInvoice }) => {
     const WinPrint = window.open("", "", "width=380,height=900");
 
     const logoUrl = `${window.location.origin}/point-of-service.png`;
-    const orderNumber = `#${Math.floor(new Date(orderInfo.orderDate).getTime())}`;
+    const orderNumber = `#${Math.floor(
+      new Date(orderInfo.orderDate).getTime()
+    )}`;
     const billNo = orderInfo.billNo || orderNumber;
-    const cashier = orderInfo.cashierName || '---';
-    const tableNo = orderInfo.table?.tableNo ?? orderInfo.tableNo ?? (orderInfo.customerDetails?.table ?? 'N/A');
+    const cashier = orderInfo.cashierName || "---";
+    const tableNo =
+      orderInfo.table?.tableNo ??
+      orderInfo.tableNo ??
+      orderInfo.customerDetails?.table ??
+      "N/A";
 
     // build items rows and totals
     const items = orderInfo.items || [];
-    let itemsRows = '';
+    let itemsRows = "";
     let totalQty = 0;
     items.forEach((it, idx) => {
       const qty = Number(it.quantity || 0);
@@ -26,10 +32,14 @@ const Invoice = ({ orderInfo, setShowInvoice }) => {
       itemsRows += `
         <tr>
           <td style="width:28px;vertical-align:top;">${idx + 1}</td>
-          <td style="vertical-align:top;">${it.name.replace(/</g, '&lt;')}</td>
+          <td style="vertical-align:top;">${it.name.replace(/</g, "&lt;")}</td>
           <td style="text-align:center;width:50px;vertical-align:top;">${qty}</td>
-          <td style="text-align:right;width:70px;vertical-align:top;">₹${price.toFixed(2)}</td>
-          <td style="text-align:right;width:80px;vertical-align:top;">₹${amount.toFixed(2)}</td>
+          <td style="text-align:right;width:70px;vertical-align:top;">₹${price.toFixed(
+            2
+          )}</td>
+          <td style="text-align:right;width:80px;vertical-align:top;">₹${amount.toFixed(
+            2
+          )}</td>
         </tr>`;
     });
 
@@ -67,15 +77,23 @@ const Invoice = ({ orderInfo, setShowInvoice }) => {
 
           <div class="hr"></div>
 
-          <div><strong>Name:</strong> ${orderInfo.customerDetails?.name || orderInfo.customerName || ''}</div>
-          <div><strong>Mobile:</strong> ${orderInfo.customerDetails?.phone || orderInfo.customerPhone || ''}</div>
+          <div><strong>Name:</strong> ${
+            orderInfo.customerDetails?.name || orderInfo.customerName || ""
+          }</div>
+          <div><strong>Mobile:</strong> ${
+            orderInfo.customerDetails?.phone || orderInfo.customerPhone || ""
+          }</div>
           <div class="underline"></div>
 
           <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px">
-            <div><strong>Date:</strong> ${new Date(orderInfo.orderDate).toLocaleDateString()}</div>
+            <div><strong>Date:</strong> ${new Date(
+              orderInfo.orderDate
+            ).toLocaleDateString()}</div>
             <div><strong>Table:</strong> ${tableNo}</div>
           </div>
-          <div style="margin-top:4px;font-size:12px"><strong>Time:</strong> ${new Date(orderInfo.orderDate).toLocaleTimeString()}</div>
+          <div style="margin-top:4px;font-size:12px"><strong>Time:</strong> ${new Date(
+            orderInfo.orderDate
+          ).toLocaleTimeString()}</div>
           <div style="margin-top:4px;font-size:12px"><strong>Cashier:</strong> ${cashier} &nbsp;&nbsp; <strong>Bill No.:</strong> ${billNo}</div>
 
           <div class="hr"></div>
@@ -111,7 +129,9 @@ const Invoice = ({ orderInfo, setShowInvoice }) => {
           </div>
           <div style="display:flex;justify-content:space-between;font-size:14px;margin-top:6px">
             <div class="bold">Round off</div>
-            <div class="bold">${Number(roundOff) >= 0 ? '+' : ''}${Number(roundOff).toFixed(2)}</div>
+            <div class="bold">${Number(roundOff) >= 0 ? "+" : ""}${Number(
+      roundOff
+    ).toFixed(2)}</div>
           </div>
 
           <div class="hr"></div>

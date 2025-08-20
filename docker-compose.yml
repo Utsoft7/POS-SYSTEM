@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 # Uses a .env file (next to this compose) for secrets/variables.
 # Create a .env (NOT committed) containing at least:
