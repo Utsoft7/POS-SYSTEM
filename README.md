@@ -64,14 +64,15 @@ This POS system is built to be scalable. The future roadmap includes:
 -   **Your Name**
 -   GitHub: [UtSoft7]((https://github.com/Utsoft7)) 
 -   LinkedIn: [your-linkedin-profile](httpss://linkedin.com/in/your-linkedin)
--   GitHub: [@your-username](httpss://github.com/your-username)
--   LinkedIn: [your-linkedin-profile](httpss://linkedin.com/in/your-linkedin)
+-   GitHub: [Shub-Debu]([httpss://github.com/your-username](https://github.com/Shubh-debug))
+-   LinkedIn: [Shubham Agarwal](https://www.linkedin.com/in/shubhamagarwal08/)
 
 ---
 
 ## Version
 
 **Current Version:** 1.0.0
+
 
 
 
