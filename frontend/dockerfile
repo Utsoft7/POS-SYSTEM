@@ -22,8 +22,11 @@ FROM nginx:stable-alpine
 # Copy the built application from the previous stage
 COPY --from=build /app/frontend/dist /usr/share/nginx/html
 
-# Expose the application port
-EXPOSE 5173
+# Add custom Nginx config with SPA fallback
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Start the application
+# Expose the actual Nginx port
+EXPOSE 80
+
+# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]

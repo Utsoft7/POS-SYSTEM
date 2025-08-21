@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 8001
 
 # Start the application
-CMD ["npx", "nodemon", "server.js"]
+CMD ["node", "server.js"]
