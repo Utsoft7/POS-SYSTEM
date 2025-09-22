@@ -55,7 +55,7 @@ export const popularDishes = [
   {
     id: 8,
     image: gulabJamun,
-    name: "Gulab Jamun",
+    name: "Gulaab Jamun",
     numberOfOrders: 310,
   },
   {
