@@ -4,7 +4,6 @@ A seamless, modern Point of Sale solution for restaurants, designed for performa
 
 [**► View Live Demo**](https://your-live-demo-link.com)
 
-![POS Dashboard](https://github.com/SukhSagar/SukhSagar/blob/main/pos-1.png?raw=true)
 
 ---
 
